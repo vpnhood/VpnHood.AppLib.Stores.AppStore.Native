@@ -1,0 +1,8 @@
+* text=auto
+
+# Shell scripts and Swift sources must stay LF (built/run on macOS)
+*.sh text eol=lf
+*.swift text eol=lf
+
+# Prebuilt framework binaries
+VpnHoodStoreKit.xcframework/**/VpnHoodStoreKit binary

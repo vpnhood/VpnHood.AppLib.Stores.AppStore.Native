@@ -1,0 +1,42 @@
+# Rebuilds VpnHoodStoreKit.xcframework from the Swift facade and commits the result.
+# Manual-only (workflow_dispatch): the facade changes rarely, and the committed xcframework
+# is what every other build (NuGet pack, consumer apps) uses — no Mac needed anywhere else.
+# Run this after changing StoreKitBridge.swift, then push a NuGet via publish-nuget.yml.
+name: Build xcframework
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-xcframework
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: true
+
+      - name: Build xcframework
+        working-directory: VpnHood.AppLib.StoreKit.IosNative/swift
+        run: |
+          xcodebuild -version
+          ./build-xcframework.sh
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add VpnHood.AppLib.StoreKit.IosNative/swift/VpnHoodStoreKit.xcframework
+          if git diff --cached --quiet; then
+            echo "xcframework unchanged; nothing to commit."
+          else
+            git commit -m "chore: rebuild VpnHoodStoreKit.xcframework"
+            git push
+          fi

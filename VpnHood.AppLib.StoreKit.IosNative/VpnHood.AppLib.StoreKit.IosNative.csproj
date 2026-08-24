@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- ================================================================================================
+	     Self-contained StoreKit 2 package for iOS: the prebuilt VpnHoodStoreKit.xcframework (the Swift
+	     facade, committed — rebuilt on a Mac only when StoreKitBridge.swift changes) PLUS the C#
+	     P/Invoke binding. It has NO VpnHood dependencies and is the ONLY place that knows about native
+	     linking. VpnHood.AppLib.Ios.AppStore references just the NuGet of the same name and stays a
+	     clean, pure-managed project.
+	     ================================================================================================ -->
+	<PropertyGroup>
+		<Description>StoreKit 2 for .NET iOS: a prebuilt Swift facade (VpnHoodStoreKit.xcframework) exposing StoreKit 2's Swift-async API over a C ABI, plus the C# P/Invoke binding. Self-contained: no VpnHood dependencies.</Description>
+		<TargetFramework>net11.0-ios</TargetFramework>
+		<SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+		<RootNamespace>VpnHood.AppLib.StoreKit.IosNative</RootNamespace>
+		<PackageId>VpnHood.AppLib.StoreKit.IosNative</PackageId>
+		<!-- Binding project: the ONLY project type whose pack embeds NativeReference content
+		     (as TargetName.resources.zip beside the dll) so consumers link the xcframework
+		     automatically. A plain class library silently drops it from the NuGet. There is no
+		     ObjC API to bind — ApiDefinition.cs is an empty required placeholder; the real
+		     binding is NativeStoreKitBridge's DllImports over the facade's C ABI. -->
+		<IsBindingProject>true</IsBindingProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ObjcBindingApiDefinition Include="ApiDefinition.cs" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>symbols.nupkg</SymbolPackageFormat>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<PathMap>$(MSBuildThisFileDirectory)=.</PathMap>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PackageLicenseExpression>LGPL-2.1-only</PackageLicenseExpression>
+		<Company>OmegaHood LLC</Company>
+		<Copyright>© OmegaHood LLC. All rights reserved.</Copyright>
+		<PackageIcon>VpnHood.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageProjectUrl>https://github.com/vpnhood/VpnHood.AppLib.StoreKit.IosNative</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/vpnhood/VpnHood.AppLib.StoreKit.IosNative</RepositoryUrl>
+		<PackageTags>StoreKit, StoreKit2, In-App Purchase, IAP, iOS, VPN, VpnHood</PackageTags>
+		<Version>8.0.0</Version>
+		<FileVersion>$([System.DateTime]::Now.ToString("yyyy.M.d.HHmm"))</FileVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\VpnHood.png" Link="Resources\VpnHood.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="..\README.md" Link="Resources\README.md">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<!-- The StoreKit 2 Swift facade. The xcframework is committed (see swift/README.md for the
+	     one-command rebuild on a Mac), so packing needs no Swift toolchain; NuGet embeds it and
+	     consumers link it into the app binary automatically (DllImport "__Internal"). No Exists()
+	     condition: a missing xcframework must fail the build, not ship a package that throws at
+	     runtime. -->
+	<ItemGroup>
+		<NativeReference Include="swift\VpnHoodStoreKit.xcframework">
+			<Kind>Framework</Kind>
+			<SmartLink>true</SmartLink>
+		</NativeReference>
+	</ItemGroup>
+
+</Project>
