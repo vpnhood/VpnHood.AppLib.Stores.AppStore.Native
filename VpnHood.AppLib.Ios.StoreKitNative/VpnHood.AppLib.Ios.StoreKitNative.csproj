@@ -45,7 +45,7 @@
 		<PackageProjectUrl>https://github.com/vpnhood/VpnHood.AppLib.Ios.StoreKitNative</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vpnhood/VpnHood.AppLib.Ios.StoreKitNative</RepositoryUrl>
 		<PackageTags>StoreKit, StoreKit2, In-App Purchase, IAP, iOS, VPN, VpnHood</PackageTags>
-		<Version>8.0.2</Version>
+		<Version>8.0.3</Version>
 		<FileVersion>$([System.DateTime]::Now.ToString("yyyy.M.d.HHmm"))</FileVersion>
 	</PropertyGroup>
 
