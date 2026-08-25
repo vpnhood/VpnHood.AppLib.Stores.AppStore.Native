@@ -1,4 +1,4 @@
-namespace VpnHood.AppLib.StoreKit.IosNative;
+namespace VpnHood.AppLib.Ios.StoreKitNative;
 
 /// <summary>A sellable product as the Swift facade reports it from StoreKit 2.</summary>
 public class StoreKitProduct

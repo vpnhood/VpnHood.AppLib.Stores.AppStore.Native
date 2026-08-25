@@ -1,4 +1,4 @@
-namespace VpnHood.AppLib.StoreKit.IosNative;
+namespace VpnHood.AppLib.Ios.StoreKitNative;
 
 /// <summary>
 /// The StoreKit 2 surface this package needs, as a seam: the native

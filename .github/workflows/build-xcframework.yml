@@ -24,7 +24,7 @@ jobs:
           persist-credentials: true
 
       - name: Build xcframework
-        working-directory: VpnHood.AppLib.StoreKit.IosNative/swift
+        working-directory: VpnHood.AppLib.Ios.StoreKitNative/swift
         run: |
           xcodebuild -version
           ./build-xcframework.sh
@@ -33,7 +33,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add VpnHood.AppLib.StoreKit.IosNative/swift/VpnHoodStoreKit.xcframework
+          git add VpnHood.AppLib.Ios.StoreKitNative/swift/VpnHoodStoreKit.xcframework
           if git diff --cached --quiet; then
             echo "xcframework unchanged; nothing to commit."
           else

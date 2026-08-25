@@ -1,4 +1,4 @@
-# VpnHood.AppLib.StoreKit.IosNative
+# VpnHood.AppLib.Ios.StoreKitNative
 
 StoreKit 2 for .NET iOS, self-contained in one NuGet:
 
@@ -30,7 +30,7 @@ callback, statically linked into the app binary (`DllImport "__Internal"`).
 ## Usage
 
 ```xml
-<PackageReference Include="VpnHood.AppLib.StoreKit.IosNative" Version="x.y.z" />
+<PackageReference Include="VpnHood.AppLib.Ios.StoreKitNative" Version="x.y.z" />
 ```
 
 ```csharp
@@ -50,10 +50,10 @@ Rebuilding the native facade (only when `StoreKitBridge.swift` changes) needs a
 Mac with Xcode 15+, or the `build-xcframework` GitHub workflow:
 
 ```bash
-cd VpnHood.AppLib.StoreKit.IosNative/swift && ./build-xcframework.sh
+cd VpnHood.AppLib.Ios.StoreKitNative/swift && ./build-xcframework.sh
 ```
 
-See [swift/README.md](VpnHood.AppLib.StoreKit.IosNative/swift/README.md) for
+See [swift/README.md](VpnHood.AppLib.Ios.StoreKitNative/swift/README.md) for
 design notes.
 
 ## Publishing

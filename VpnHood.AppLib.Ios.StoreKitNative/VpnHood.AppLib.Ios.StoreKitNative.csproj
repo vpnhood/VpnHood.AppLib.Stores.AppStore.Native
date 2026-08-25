@@ -10,8 +10,8 @@
 		<Description>StoreKit 2 for .NET iOS: a prebuilt Swift facade (VpnHoodStoreKit.xcframework) exposing StoreKit 2's Swift-async API over a C ABI, plus the C# P/Invoke binding. Self-contained: no VpnHood dependencies.</Description>
 		<TargetFramework>net11.0-ios</TargetFramework>
 		<SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
-		<RootNamespace>VpnHood.AppLib.StoreKit.IosNative</RootNamespace>
-		<PackageId>VpnHood.AppLib.StoreKit.IosNative</PackageId>
+		<RootNamespace>VpnHood.AppLib.Ios.StoreKitNative</RootNamespace>
+		<PackageId>VpnHood.AppLib.Ios.StoreKitNative</PackageId>
 		<!-- Binding project: the ONLY project type whose pack embeds NativeReference content
 		     (as TargetName.resources.zip beside the dll) so consumers link the xcframework
 		     automatically. A plain class library silently drops it from the NuGet. There is no
@@ -42,8 +42,8 @@
 		<Copyright>© OmegaHood LLC. All rights reserved.</Copyright>
 		<PackageIcon>VpnHood.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageProjectUrl>https://github.com/vpnhood/VpnHood.AppLib.StoreKit.IosNative</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/vpnhood/VpnHood.AppLib.StoreKit.IosNative</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/vpnhood/VpnHood.AppLib.Ios.StoreKitNative</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/vpnhood/VpnHood.AppLib.Ios.StoreKitNative</RepositoryUrl>
 		<PackageTags>StoreKit, StoreKit2, In-App Purchase, IAP, iOS, VPN, VpnHood</PackageTags>
 		<Version>8.0.1</Version>
 		<FileVersion>$([System.DateTime]::Now.ToString("yyyy.M.d.HHmm"))</FileVersion>
