@@ -12,16 +12,14 @@ namespace VpnHood.AppLib.Ios.StoreKitNative;
 /// </summary>
 public class NativeStoreKitBridge : IStoreKitBridge
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
     public async Task<IReadOnlyList<StoreKitProduct>> LoadProducts(IReadOnlyList<string> productIds,
         CancellationToken cancellationToken)
     {
-        var productIdsJson = JsonSerializer.Serialize(productIds, JsonOptions);
+        var productIdsJson = JsonSerializer.Serialize(productIds, StoreKitJsonContext.Default.IReadOnlyListString);
         var resultJson = await Invoke(
             contextHandle => vhsk_load_products(productIdsJson, contextHandle, CompletedDelegate),
             cancellationToken).ConfigureAwait(false);
-        return JsonSerializer.Deserialize<List<StoreKitProduct>>(resultJson, JsonOptions)
+        return JsonSerializer.Deserialize(resultJson, StoreKitJsonContext.Default.ListStoreKitProduct)
             ?? throw new InvalidOperationException("StoreKit returned no product list.");
     }
 
@@ -31,7 +29,7 @@ public class NativeStoreKitBridge : IStoreKitBridge
         var resultJson = await Invoke(
             contextHandle => vhsk_purchase(productId, appAccountToken.ToString(), contextHandle, CompletedDelegate),
             cancellationToken).ConfigureAwait(false);
-        return JsonSerializer.Deserialize<StoreKitPurchase>(resultJson, JsonOptions)
+        return JsonSerializer.Deserialize(resultJson, StoreKitJsonContext.Default.StoreKitPurchase)
             ?? throw new InvalidOperationException("StoreKit returned no purchase result.");
     }
 
@@ -42,7 +40,7 @@ public class NativeStoreKitBridge : IStoreKitBridge
             cancellationToken).ConfigureAwait(false);
         return resultJson is "null" or ""
             ? null
-            : JsonSerializer.Deserialize<StoreKitPurchase>(resultJson, JsonOptions);
+            : JsonSerializer.Deserialize(resultJson, StoreKitJsonContext.Default.StoreKitPurchase);
     }
 
     public async Task ShowManageSubscriptions(CancellationToken cancellationToken)
