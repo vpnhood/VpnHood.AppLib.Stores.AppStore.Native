@@ -87,7 +87,7 @@ jobs:
       run: dotnet pack ${{ env.CSPROJ }} --no-build --configuration ${{ env.BUILD_CONFIG }}
 
     # Trusted publishing: exchange the workflow's OIDC token for a short-lived nuget.org
-    # API key (policy: vpnhood/VpnHood.AppLib.Ios.StoreKitNative + publish-nuget.yml). No
+    # API key (policy: vpnhood/VpnHood.AppLib.Stores.AppStore.Native + publish-nuget.yml). No
     # long-lived NUGET_API_KEY secret anywhere.
     - name: NuGet login (trusted publishing)
       if: github.event_name != 'pull_request'
