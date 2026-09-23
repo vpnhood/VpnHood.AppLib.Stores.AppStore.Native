@@ -1,4 +1,4 @@
-# Packs and publishes VpnHood.AppLib.Ios.StoreKitNative to nuget.org. Same pattern as the
+# Packs and publishes VpnHood.AppLib.Stores.AppStore.Native (formerly VpnHood.AppLib.Ios.StoreKitNative) to nuget.org. Same pattern as the
 # other VpnHood single-package repos (e.g. VpnHood.AppLib.Assets.IpLocations): every push to
 # main bumps pub/PubVersion.json, stamps the csproj, commits the bump, packs, and pushes the
 # package. Runs on windows-latest — the committed xcframework means packing net11.0-ios only
@@ -27,7 +27,7 @@ jobs:
       BUILD_CONFIG: 'Release'
       DOTNET_NOLOGO: '1'
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
-      CSPROJ: VpnHood.AppLib.Ios.StoreKitNative/VpnHood.AppLib.Ios.StoreKitNative.csproj
+      CSPROJ: VpnHood.AppLib.Stores.AppStore.Native/VpnHood.AppLib.Stores.AppStore.Native.csproj
 
     steps:
     - name: Checkout

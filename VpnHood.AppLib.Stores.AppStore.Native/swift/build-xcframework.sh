@@ -3,7 +3,7 @@
 # build-xcframework.sh — build VpnHoodStoreKit.xcframework from the Swift
 # facade. Run ON A MAC with Xcode 15+:
 #
-#   cd VpnHood.AppLib.Ios.StoreKitNative/swift && ./build-xcframework.sh
+#   cd VpnHood.AppLib.Stores.AppStore.Native/swift && ./build-xcframework.sh
 #
 # Output lands at swift/VpnHoodStoreKit.xcframework, where the csproj's
 # conditional NativeReference picks it up. Commit the built xcframework (it is

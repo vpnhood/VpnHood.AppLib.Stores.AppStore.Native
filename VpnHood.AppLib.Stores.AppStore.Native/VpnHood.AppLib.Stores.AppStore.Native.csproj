@@ -3,7 +3,7 @@
 	     Self-contained StoreKit 2 package for iOS: the prebuilt VpnHoodStoreKit.xcframework (the Swift
 	     facade, committed — rebuilt on a Mac only when StoreKitBridge.swift changes) PLUS the C#
 	     P/Invoke binding. It has NO VpnHood dependencies and is the ONLY place that knows about native
-	     linking. VpnHood.AppLib.Ios.AppStore references just the NuGet of the same name and stays a
+	     linking. VpnHood.AppLib.Stores.AppStore references just this NuGet and stays a
 	     clean, pure-managed project.
 	     ================================================================================================ -->
 	<PropertyGroup>
@@ -11,7 +11,7 @@
 		<TargetFramework>net11.0-ios</TargetFramework>
 		<SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
 		<RootNamespace>VpnHood.AppLib.Ios.StoreKitNative</RootNamespace>
-		<PackageId>VpnHood.AppLib.Ios.StoreKitNative</PackageId>
+		<PackageId>VpnHood.AppLib.Stores.AppStore.Native</PackageId>
 		<!-- Binding project: the ONLY project type whose pack embeds NativeReference content
 		     (as TargetName.resources.zip beside the dll) so consumers link the xcframework
 		     automatically. A plain class library silently drops it from the NuGet. There is no
