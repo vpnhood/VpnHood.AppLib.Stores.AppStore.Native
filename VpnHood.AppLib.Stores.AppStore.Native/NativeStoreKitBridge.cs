@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using ObjCRuntime;
 
-namespace VpnHood.AppLib.Ios.StoreKitNative;
+namespace VpnHood.AppLib.Stores.AppStore.Native;
 
 /// <summary>
 /// Binding to the VpnHoodStoreKit Swift facade (swift/VpnHoodStoreKit): plain

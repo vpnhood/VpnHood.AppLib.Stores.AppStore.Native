@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace VpnHood.AppLib.Ios.StoreKitNative;
+namespace VpnHood.AppLib.Stores.AppStore.Native;
 
 /// <summary>
 /// Source-generated JSON contract for the Swift facade's payloads. Matches the reflection

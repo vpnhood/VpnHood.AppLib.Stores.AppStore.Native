@@ -1,7 +1,7 @@
 # VpnHood.AppLib.Stores.AppStore.Native
 
-Formerly `VpnHood.AppLib.Ios.StoreKitNative`: the id changed in 2026-09 so that no VpnHood package id
-starts with an OS.
+Formerly `VpnHood.AppLib.Ios.StoreKitNative`: the id and the namespace changed in 2026-09 so that no
+VpnHood package id starts with an OS. The namespace is the package id.
 
 StoreKit 2 for .NET iOS, self-contained in one NuGet:
 
