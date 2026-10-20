@@ -56,7 +56,7 @@ Mac with Xcode 15+, or the `build-xcframework` GitHub workflow:
 cd VpnHood.AppLib.Stores.AppStore.Native/swift && ./build-xcframework.sh
 ```
 
-See [swift/README.md](VpnHood.AppLib.Stores.AppStore.Native/swift/README.md) for
+See [swift/README.md](https://github.com/vpnhood/VpnHood.AppLib.Stores.AppStore.Native/blob/main/VpnHood.AppLib.Stores.AppStore.Native/swift/README.md) for
 design notes.
 
 ## Publishing
@@ -67,4 +67,4 @@ version and upgrade deliberately — the package intentionally changes rarely.
 
 ## License
 
-[LGPL-2.1](LICENSE)
+[LGPL-2.1](https://github.com/vpnhood/VpnHood.AppLib.Stores.AppStore.Native/blob/main/LICENSE)
