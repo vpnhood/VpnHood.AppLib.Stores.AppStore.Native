@@ -1,5 +1,5 @@
 // StoreKitBridge.swift — the C ABI facade over StoreKit 2 that
-// VpnHood.AppLib.Ios.AppStore P/Invokes (NativeStoreKitBridge.cs).
+// NativeStoreKitBridge.cs P/Invokes.
 //
 // Contract (mirrored on the C# side, keep in sync):
 //   - every function is @_cdecl, takes UTF-8 C strings, and completes exactly
@@ -8,9 +8,13 @@
 //     error message
 //   - JSON field names are camelCase (System.Text.Json web defaults)
 //
+// It mirrors StoreKit and decides nothing for the app: which products it sells,
+// what an introductory offer makes the first price, which entitlement counts and
+// when a transaction is finished are the caller's, so changing any of them never
+// needs this binary rebuilt.
+//
 // Why this exists: Microsoft.iOS does not bind StoreKit 2's Swift-async API.
-// This file is intentionally the ONLY Swift in the product — everything above
-// it is C#.
+// This file is intentionally the package's ONLY Swift — everything above it is C#.
 
 import Foundation
 import StoreKit
@@ -42,12 +46,12 @@ public func vhsk_load_products(
             let ids = try JSONDecoder().decode([String].self, from: idsData)
             let products = try await Product.products(for: ids)
 
-            let mapped: [[String: Any]] = try await withThrowingTaskGroup(of: [String: Any].self) { group in
-                for product in products where product.subscription != nil {
-                    group.addTask { try await mapProduct(product) }
+            let mapped: [[String: Any]] = await withTaskGroup(of: [String: Any].self) { group in
+                for product in products {
+                    group.addTask { await mapProduct(product) }
                 }
                 var results: [[String: Any]] = []
-                for try await item in group { results.append(item) }
+                for await item in group { results.append(item) }
                 return results
             }
 
@@ -59,35 +63,53 @@ public func vhsk_load_products(
     }
 }
 
-private func mapProduct(_ product: Product) async throws -> [String: Any] {
-    guard let subscription = product.subscription else {
-        throw NSError(domain: "vhsk", code: 1,
-                      userInfo: [NSLocalizedDescriptionKey: "\(product.id) is not a subscription"])
-    }
-
-    // the first price the user actually pays, and any free-trial phase, come from
-    // the introductory offer — only when this user is still eligible for it
-    var currentPrice = product.price
-    var trialPeriodIso: String? = nil
-    if let intro = subscription.introductoryOffer,
-       await subscription.isEligibleForIntroOffer {
-        if intro.paymentMode == .freeTrial {
-            trialPeriodIso = isoDuration(intro.period)
-        } else {
-            currentPrice = intro.price
-        }
-    }
-
+private func mapProduct(_ product: Product) async -> [String: Any] {
     var item: [String: Any] = [
         "id": product.id,
+        "type": productType(product.type),
         "price": decimalToDouble(product.price),
-        "currentPrice": decimalToDouble(currentPrice),
-        "periodIso": isoDuration(subscription.subscriptionPeriod),
         "currencyCode": product.priceFormatStyle.currencyCode,
         "currencySymbol": product.priceFormatStyle.locale.currencySymbol ?? product.priceFormatStyle.currencyCode
     ]
-    if let trialPeriodIso { item["trialPeriodIso"] = trialPeriodIso }
+
+    // auto-renewable subscriptions only; StoreKit gives no other type this info
+    if let subscription = product.subscription {
+        let isEligibleForIntroOffer = await subscription.isEligibleForIntroOffer
+        var mappedSubscription: [String: Any] = [
+            "periodIso": isoDuration(subscription.subscriptionPeriod),
+            "isEligibleForIntroOffer": isEligibleForIntroOffer
+        ]
+        if let offer = subscription.introductoryOffer {
+            let mappedOffer: [String: Any] = [
+                "paymentMode": paymentMode(offer.paymentMode),
+                "price": decimalToDouble(offer.price),
+                "periodIso": isoDuration(offer.period),
+                "periodCount": offer.periodCount
+            ]
+            mappedSubscription["introductoryOffer"] = mappedOffer
+        }
+        item["subscription"] = mappedSubscription
+    }
     return item
+}
+
+private func productType(_ type: Product.ProductType) -> String {
+    switch type {
+    case .consumable: return "consumable"
+    case .nonConsumable: return "nonConsumable"
+    case .autoRenewable: return "autoRenewable"
+    case .nonRenewable: return "nonRenewable"
+    default: return type.rawValue
+    }
+}
+
+private func paymentMode(_ mode: Product.SubscriptionOffer.PaymentMode) -> String {
+    switch mode {
+    case .freeTrial: return "freeTrial"
+    case .payAsYouGo: return "payAsYouGo"
+    case .payUpFront: return "payUpFront"
+    default: return mode.rawValue
+    }
 }
 
 // NSDecimalNumber.doubleValue is lossy (46.99 becomes 46.989999999999995 — it multiplies the
@@ -108,41 +130,60 @@ private func isoDuration(_ period: Product.SubscriptionPeriod) -> String {
     }
 }
 
+// ------------------------------------------------------------ transactions --
+
+// StoreKit has verified the JWS on the device; a server that receives it verifies it again itself.
+private func mapTransaction(_ verification: VerificationResult<Transaction>) throws -> [String: Any] {
+    let transaction = try checked(verification)
+    var item: [String: Any] = [
+        "id": String(transaction.id),
+        "originalId": String(transaction.originalID),
+        "productId": transaction.productID,
+        "purchaseDate": transaction.purchaseDate.ISO8601Format(),
+        "jws": verification.jwsRepresentation
+    ]
+    if let expirationDate = transaction.expirationDate {
+        item["expirationDate"] = expirationDate.ISO8601Format()
+    }
+    return item
+}
+
 // ---------------------------------------------------------------- purchase --
 
+// The account token is optional, as StoreKit's own option is. The transaction is left unfinished:
+// StoreKit keeps one until the app has delivered the purchase, so the caller finishes it with
+// vhsk_finish_transaction once it has.
 @_cdecl("vhsk_purchase")
 public func vhsk_purchase(
     _ productIdC: UnsafePointer<CChar>,
-    _ appAccountTokenC: UnsafePointer<CChar>,
+    _ appAccountTokenC: UnsafePointer<CChar>?,
     _ context: UnsafeMutableRawPointer?,
     _ callback: @escaping VhskCallback
 ) {
     let productId = String(cString: productIdC)
-    let appAccountToken = String(cString: appAccountTokenC)
+    let appAccountToken = appAccountTokenC.map { String(cString: $0) }
     Task {
         do {
-            guard let uuid = UUID(uuidString: appAccountToken) else {
-                throw NSError(domain: "vhsk", code: 2,
-                              userInfo: [NSLocalizedDescriptionKey: "appAccountToken is not a UUID"])
+            var options: Set<Product.PurchaseOption> = []
+            if let appAccountToken {
+                guard let uuid = UUID(uuidString: appAccountToken) else {
+                    throw NSError(domain: "vhsk", code: 2,
+                                  userInfo: [NSLocalizedDescriptionKey: "appAccountToken is not a UUID"])
+                }
+                options.insert(.appAccountToken(uuid))
             }
             guard let product = try await Product.products(for: [productId]).first else {
                 throw NSError(domain: "vhsk", code: 3,
                               userInfo: [NSLocalizedDescriptionKey: "unknown product: \(productId)"])
             }
 
-            let result = try await product.purchase(options: [.appAccountToken(uuid)])
+            let result = try await product.purchase(options: options)
             switch result {
             case .success(let verification):
-                // StoreKit already verified the JWS on-device; the SIGNED payload is
-                // what travels to the portal, which re-verifies server-side anyway.
-                let transaction = try checked(verification)
                 let payload: [String: Any] = [
                     "state": "purchased",
-                    "transactionId": String(transaction.id),
-                    "originalTransactionId": String(transaction.originalID),
-                    "jws": verification.jwsRepresentation
+                    "transaction": try mapTransaction(verification)
                 ]
-                await transaction.finish()
                 let json = try JSONSerialization.data(withJSONObject: payload)
                 complete(context, callback, ok: true, String(data: json, encoding: .utf8) ?? "{}")
             case .pending:
@@ -160,32 +201,53 @@ public func vhsk_purchase(
 
 // ------------------------------------------------------------ entitlements --
 
-@_cdecl("vhsk_current_entitlement")
-public func vhsk_current_entitlement(
+// Every current entitlement: the latest transaction of each product the user owns.
+@_cdecl("vhsk_current_entitlements")
+public func vhsk_current_entitlements(
     _ context: UnsafeMutableRawPointer?,
     _ callback: @escaping VhskCallback
 ) {
     Task {
         do {
-            var newest: (transaction: Transaction, jws: String)? = nil
+            var mapped: [[String: Any]] = []
             for await verification in Transaction.currentEntitlements {
-                let transaction = try checked(verification)
-                if newest == nil || transaction.purchaseDate > newest!.transaction.purchaseDate {
-                    newest = (transaction, verification.jwsRepresentation)
+                mapped.append(try mapTransaction(verification))
+            }
+            let json = try JSONSerialization.data(withJSONObject: mapped)
+            complete(context, callback, ok: true, String(data: json, encoding: .utf8) ?? "[]")
+        } catch {
+            completeError(context, callback, error)
+        }
+    }
+}
+
+// ------------------------------------------------------------------ finish --
+
+// Finishes the transaction with this id while it is unfinished, answering true; false when none
+// is (finished already, or never this device's), so finishing twice is harmless. The caller has
+// decided it is delivered, so it is finished whatever the device's own verification said.
+@_cdecl("vhsk_finish_transaction")
+public func vhsk_finish_transaction(
+    _ transactionIdC: UnsafePointer<CChar>,
+    _ context: UnsafeMutableRawPointer?,
+    _ callback: @escaping VhskCallback
+) {
+    let transactionIdText = String(cString: transactionIdC)
+    Task {
+        do {
+            guard let transactionId = UInt64(transactionIdText) else {
+                throw NSError(domain: "vhsk", code: 5,
+                              userInfo: [NSLocalizedDescriptionKey: "not a transaction id: \(transactionIdText)"])
+            }
+            for await verification in Transaction.unfinished {
+                let transaction = verification.unsafePayloadValue
+                if transaction.id == transactionId {
+                    await transaction.finish()
+                    complete(context, callback, ok: true, "true")
+                    return
                 }
             }
-            guard let newest else {
-                complete(context, callback, ok: true, "null")
-                return
-            }
-            let payload: [String: Any] = [
-                "state": "purchased",
-                "transactionId": String(newest.transaction.id),
-                "originalTransactionId": String(newest.transaction.originalID),
-                "jws": newest.jws
-            ]
-            let json = try JSONSerialization.data(withJSONObject: payload)
-            complete(context, callback, ok: true, String(data: json, encoding: .utf8) ?? "null")
+            complete(context, callback, ok: true, "false")
         } catch {
             completeError(context, callback, error)
         }

@@ -1,22 +1,24 @@
 namespace VpnHood.AppLib.Stores.AppStore.Native;
 
-/// <summary>A sellable product as the Swift facade reports it from StoreKit 2.</summary>
+/// <summary>A product as StoreKit 2 reports it, of any type.</summary>
 public class StoreKitProduct
 {
+    public const string TypeConsumable = "consumable";
+    public const string TypeNonConsumable = "nonConsumable";
+    public const string TypeAutoRenewable = "autoRenewable";
+    public const string TypeNonRenewable = "nonRenewable";
+
     public required string Id { get; init; }
 
-    /// <summary>Decimal price in the store currency (the recurring, non-introductory price).</summary>
+    /// <summary>One of the Type constants.</summary>
+    public required string Type { get; init; }
+
+    /// <summary>Decimal price in the store currency; for a subscription, the recurring one, without any offer.</summary>
     public required double Price { get; init; }
-
-    /// <summary>First price actually paid: the introductory offer if one applies, else Price.</summary>
-    public required double CurrentPrice { get; init; }
-
-    /// <summary>ISO 8601 duration of the billing period, e.g. "P1M".</summary>
-    public required string PeriodIso { get; init; }
-
-    /// <summary>ISO 8601 duration of the free-trial phase, when the eligible offer has one.</summary>
-    public string? TrialPeriodIso { get; init; }
 
     public required string CurrencyCode { get; init; }
     public required string CurrencySymbol { get; init; }
+
+    /// <summary>Present for an auto-renewable subscription only.</summary>
+    public StoreKitSubscription? Subscription { get; init; }
 }

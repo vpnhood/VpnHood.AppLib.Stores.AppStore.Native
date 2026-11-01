@@ -23,24 +23,31 @@ public class NativeStoreKitBridge : IStoreKitBridge
             ?? throw new InvalidOperationException("StoreKit returned no product list.");
     }
 
-    public async Task<StoreKitPurchase> Purchase(string productId, Guid appAccountToken,
+    public async Task<StoreKitPurchase> Purchase(string productId, Guid? appAccountToken,
         CancellationToken cancellationToken)
     {
         var resultJson = await Invoke(
-            contextHandle => vhsk_purchase(productId, appAccountToken.ToString(), contextHandle, CompletedDelegate),
+            contextHandle => vhsk_purchase(productId, appAccountToken?.ToString(), contextHandle, CompletedDelegate),
             cancellationToken).ConfigureAwait(false);
         return JsonSerializer.Deserialize(resultJson, StoreKitJsonContext.Default.StoreKitPurchase)
             ?? throw new InvalidOperationException("StoreKit returned no purchase result.");
     }
 
-    public async Task<StoreKitPurchase?> CurrentEntitlement(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<StoreKitTransaction>> CurrentEntitlements(CancellationToken cancellationToken)
     {
         var resultJson = await Invoke(
-            contextHandle => vhsk_current_entitlement(contextHandle, CompletedDelegate),
+            contextHandle => vhsk_current_entitlements(contextHandle, CompletedDelegate),
             cancellationToken).ConfigureAwait(false);
-        return resultJson is "null" or ""
-            ? null
-            : JsonSerializer.Deserialize(resultJson, StoreKitJsonContext.Default.StoreKitPurchase);
+        return JsonSerializer.Deserialize(resultJson, StoreKitJsonContext.Default.ListStoreKitTransaction)
+            ?? throw new InvalidOperationException("StoreKit returned no entitlement list.");
+    }
+
+    public async Task<bool> FinishTransaction(string transactionId, CancellationToken cancellationToken)
+    {
+        var resultJson = await Invoke(
+            contextHandle => vhsk_finish_transaction(transactionId, contextHandle, CompletedDelegate),
+            cancellationToken).ConfigureAwait(false);
+        return JsonSerializer.Deserialize(resultJson, StoreKitJsonContext.Default.Boolean);
     }
 
     public async Task ShowManageSubscriptions(CancellationToken cancellationToken)
@@ -102,12 +109,17 @@ public class NativeStoreKitBridge : IStoreKitBridge
     [DllImport("__Internal", CallingConvention = CallingConvention.Cdecl)]
     private static extern void vhsk_load_products(string productIdsJson, nint context, CompletionDelegate callback);
 
+    // a null appAccountToken crosses as a null pointer: no account binding
     [DllImport("__Internal", CallingConvention = CallingConvention.Cdecl)]
-    private static extern void vhsk_purchase(string productId, string appAccountToken, nint context,
+    private static extern void vhsk_purchase(string productId, string? appAccountToken, nint context,
         CompletionDelegate callback);
 
     [DllImport("__Internal", CallingConvention = CallingConvention.Cdecl)]
-    private static extern void vhsk_current_entitlement(nint context, CompletionDelegate callback);
+    private static extern void vhsk_current_entitlements(nint context, CompletionDelegate callback);
+
+    [DllImport("__Internal", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void vhsk_finish_transaction(string transactionId, nint context,
+        CompletionDelegate callback);
 
     [DllImport("__Internal", CallingConvention = CallingConvention.Cdecl)]
     private static extern void vhsk_show_manage_subscriptions(nint context, CompletionDelegate callback);

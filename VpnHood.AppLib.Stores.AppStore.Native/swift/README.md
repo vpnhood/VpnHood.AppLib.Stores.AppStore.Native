@@ -1,14 +1,15 @@
 # VpnHoodStoreKit — the StoreKit 2 Swift facade
 
 Microsoft.iOS does not bind StoreKit 2's Swift-async API, so this tiny Swift
-package exposes exactly the four calls the C# side needs over a **C ABI**
+package exposes the five calls the C# side needs over a **C ABI**
 (`@_cdecl` functions + JSON strings + one completion callback):
 
 | C function | StoreKit 2 |
 | --- | --- |
-| `vhsk_load_products` | `Product.products(for:)` + intro-offer eligibility |
-| `vhsk_purchase` | `product.purchase(options: [.appAccountToken(uuid)])` |
-| `vhsk_current_entitlement` | `Transaction.currentEntitlements` (newest) |
+| `vhsk_load_products` | `Product.products(for:)`, every type, with each subscription's introductory offer and eligibility |
+| `vhsk_purchase` | `product.purchase(options:)`, the account token optional; the transaction is left unfinished |
+| `vhsk_current_entitlements` | `Transaction.currentEntitlements`, all of them |
+| `vhsk_finish_transaction` | `transaction.finish()` for the unfinished transaction with that id |
 | `vhsk_show_manage_subscriptions` | `AppStore.showManageSubscriptions(in: scene)` |
 
 The C# binding lives in `../NativeStoreKitBridge.cs`; the two
@@ -31,13 +32,13 @@ runner) runs this script and commits the result.
 
 ## Design notes
 
-- `transaction.finish()` is called immediately after a successful purchase:
-  with the portal flow, delivery acknowledgment happens SERVER-side
-  (POST /billing/purchases re-fetches the transaction from Apple), so an unfinished
-  transaction would only cause repeated `updates` replays on the device.
-- Purchases carry `appAccountToken` = the portal's external uid (a UUID), the
-  same value Google receives as `obfuscatedAccountId` — the backend owns that
-  mapping.
-- Only auto-renewable subscriptions are mapped by `vhsk_load_products`;
-  one-time products can be added to the same seam when Windows/consumables
-  land.
+- The facade mirrors StoreKit and decides nothing: every product type, the raw
+  introductory offer beside the user's eligibility for it, every current
+  entitlement. An app's rules live in its own C#, so changing them never needs
+  this binary rebuilt.
+- A purchased transaction is left unfinished, as Apple asks until the purchase
+  is delivered; the caller finishes it with `vhsk_finish_transaction`. Until
+  then StoreKit keeps it in `Transaction.unfinished` and replays it in
+  `Transaction.updates`; a subscription is in `currentEntitlements` either way.
+- Only verified transactions cross: an unverified one fails the purchase or the
+  entitlement call. A server holding the JWS verifies it again itself.

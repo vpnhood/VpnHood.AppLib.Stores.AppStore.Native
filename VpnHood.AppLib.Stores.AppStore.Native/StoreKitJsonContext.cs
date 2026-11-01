@@ -14,4 +14,6 @@ namespace VpnHood.AppLib.Stores.AppStore.Native;
 [JsonSerializable(typeof(IReadOnlyList<string>))]
 [JsonSerializable(typeof(List<StoreKitProduct>))]
 [JsonSerializable(typeof(StoreKitPurchase))]
+[JsonSerializable(typeof(List<StoreKitTransaction>))]
+[JsonSerializable(typeof(bool))]
 internal partial class StoreKitJsonContext : JsonSerializerContext;

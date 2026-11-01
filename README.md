@@ -10,18 +10,24 @@ StoreKit 2 for .NET iOS, self-contained in one NuGet:
   completion callback). Prebuilt and committed, so consumers never need a Swift
   toolchain.
 - **The C# binding** — `NativeStoreKitBridge` (P/Invoke over `__Internal`),
-  the `IStoreKitBridge` interface, and the `StoreKitProduct` /
-  `StoreKitPurchase` DTOs.
+  the `IStoreKitBridge` interface, and its DTOs (`StoreKitProduct`,
+  `StoreKitSubscription`, `StoreKitOffer`, `StoreKitPurchase`,
+  `StoreKitTransaction`).
 
 The two sides are a matched pair: change the contract in both or not at all.
 That is why they live in the same repository and ship as one atomically
 versioned package.
 
+It mirrors StoreKit and decides nothing for the app: which products it sells,
+what an introductory offer makes the first price, which entitlement counts and
+when a purchase is delivered are the caller's.
+
 | C function | StoreKit 2 |
 | --- | --- |
-| `vhsk_load_products` | `Product.products(for:)` + intro-offer eligibility |
-| `vhsk_purchase` | `product.purchase(options: [.appAccountToken(uuid)])` |
-| `vhsk_current_entitlement` | `Transaction.currentEntitlements` (newest) |
+| `vhsk_load_products` | `Product.products(for:)`, every type, with each subscription's introductory offer and eligibility |
+| `vhsk_purchase` | `product.purchase(options:)`, the account token optional; the transaction is left unfinished |
+| `vhsk_current_entitlements` | `Transaction.currentEntitlements`, all of them |
+| `vhsk_finish_transaction` | `transaction.finish()` for the unfinished transaction with that id |
 | `vhsk_show_manage_subscriptions` | `AppStore.showManageSubscriptions(in: scene)` |
 
 ## Why a facade?
@@ -39,6 +45,11 @@ callback, statically linked into the app binary (`DllImport "__Internal"`).
 ```csharp
 IStoreKitBridge bridge = new NativeStoreKitBridge();
 var products = await bridge.LoadProducts(["my.product.id"], cancellationToken);
+var purchase = await bridge.Purchase("my.product.id", appAccountToken: null, cancellationToken);
+if (purchase.Transaction != null) {
+    // deliver it first (say, your server verifies purchase.Transaction.Jws), then:
+    await bridge.FinishTransaction(purchase.Transaction.Id, cancellationToken);
+}
 ```
 
 The xcframework is embedded in the NuGet and linked into the main executable
