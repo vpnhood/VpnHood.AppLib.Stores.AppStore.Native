@@ -1,8 +1,8 @@
 # VpnHoodStoreKit — the StoreKit 2 Swift facade
 
-Microsoft.iOS does not bind StoreKit 2's Swift-async API, so this tiny Swift
-package exposes the five calls the C# side needs over a **C ABI**
-(`@_cdecl` functions + JSON strings + one completion callback):
+Microsoft.iOS and Microsoft.tvOS do not bind StoreKit 2's Swift-async API, so
+this tiny Swift package exposes the five calls the C# side needs (four on tvOS)
+over a **C ABI** (`@_cdecl` functions + JSON strings + one completion callback):
 
 | C function | StoreKit 2 |
 | --- | --- |
@@ -10,7 +10,7 @@ package exposes the five calls the C# side needs over a **C ABI**
 | `vhsk_purchase` | `product.purchase(options:)`, the account token optional; the transaction is left unfinished |
 | `vhsk_current_entitlements` | `Transaction.currentEntitlements`, all of them |
 | `vhsk_finish_transaction` | `transaction.finish()` for the unfinished transaction with that id |
-| `vhsk_show_manage_subscriptions` | `AppStore.showManageSubscriptions(in: scene)` |
+| `vhsk_show_manage_subscriptions` | `AppStore.showManageSubscriptions(in: scene)`; iOS alone, as tvOS has no such sheet |
 
 The C# binding lives in `../NativeStoreKitBridge.cs`; the two
 files are a matched pair — change the contract in both or not at all.
@@ -23,7 +23,8 @@ On a Mac with Xcode 15+:
 ./build-xcframework.sh
 ```
 
-This produces `swift/VpnHoodStoreKit.xcframework`, which the csproj references
+This produces `swift/VpnHoodStoreKit.xcframework`, with slices for iOS, the iOS
+simulator, tvOS and the tvOS simulator, which the csproj references
 as a `NativeReference` — check the built xcframework in, so packing and
 consumer builds never need a Swift toolchain. The reference is unconditional:
 a missing xcframework fails the pack instead of shipping a package that throws

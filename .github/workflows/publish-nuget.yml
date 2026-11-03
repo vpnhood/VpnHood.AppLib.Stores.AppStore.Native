@@ -1,8 +1,8 @@
 # Packs and publishes VpnHood.AppLib.Stores.AppStore.Native (formerly VpnHood.AppLib.Ios.StoreKitNative) to nuget.org. Same pattern as the
 # other VpnHood single-package repos (e.g. VpnHood.AppLib.Assets.IpLocations): every push to
 # main bumps pub/PubVersion.json, stamps the csproj, commits the bump, packs, and pushes the
-# package. Runs on windows-latest — the committed xcframework means packing net11.0-ios only
-# needs the iOS workload, never a Mac.
+# package. Runs on windows-latest — the committed xcframework means packing net11.0-ios and
+# net11.0-tvos only needs their workloads, never a Mac.
 name: Publish NuGet
 
 on:
@@ -66,16 +66,16 @@ jobs:
         git commit -m "chore: bump version $($pub.Version)"
         git push
 
-    # net11.0-ios needs the .NET 11 preview SDK; track the preview channel (matches the
-    # monorepo's publish_nugets.yml) so each new preview is picked up automatically.
+    # net11.0-ios and net11.0-tvos need the .NET 11 preview SDK; track the preview channel (matches
+    # the monorepo's publish_nugets.yml) so each new preview is picked up automatically.
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
       with:
         dotnet-version: '11.0'
         dotnet-quality: preview
 
-    - name: Install .NET iOS workload
-      run: dotnet workload install ios
+    - name: Install the .NET iOS and tvOS workloads
+      run: dotnet workload install ios tvos
 
     - name: Restore dependencies
       run: dotnet restore ${{ env.CSPROJ }}

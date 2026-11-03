@@ -1,3 +1,5 @@
+using System.Runtime.Versioning;
+
 namespace VpnHood.AppLib.Stores.AppStore.Native;
 
 /// <summary>
@@ -30,7 +32,9 @@ public interface IStoreKitBridge
 
     /// <summary>
     /// Presents Apple's manage-subscriptions sheet inside the app and returns when it is
-    /// dismissed. Nothing leaves the app: no browser, no switch to the App Store.
+    /// dismissed. Nothing leaves the app: no browser, no switch to the App Store. Not on tvOS,
+    /// which has no such sheet: the TV's Settings manage subscriptions.
     /// </summary>
+    [UnsupportedOSPlatform("tvos")]
     Task ShowManageSubscriptions(CancellationToken cancellationToken);
 }

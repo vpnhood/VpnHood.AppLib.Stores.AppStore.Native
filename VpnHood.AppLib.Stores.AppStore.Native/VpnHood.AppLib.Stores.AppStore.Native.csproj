@@ -1,14 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<!-- ================================================================================================
-	     Self-contained StoreKit 2 package for iOS: the prebuilt VpnHoodStoreKit.xcframework (the Swift
+	     Self-contained StoreKit 2 package for iOS and tvOS: the prebuilt VpnHoodStoreKit.xcframework (the Swift
 	     facade, committed — rebuilt on a Mac only when StoreKitBridge.swift changes) PLUS the C#
 	     P/Invoke binding. It has NO VpnHood dependencies and is the ONLY place that knows about native
 	     linking. VpnHood.AppLib.Stores.AppStore references just this NuGet and stays a
 	     clean, pure-managed project.
 	     ================================================================================================ -->
 	<PropertyGroup>
-		<Description>StoreKit 2 for .NET iOS: a prebuilt Swift facade (VpnHoodStoreKit.xcframework) exposing StoreKit 2's Swift-async API over a C ABI, plus the C# P/Invoke binding. Self-contained: no VpnHood dependencies.</Description>
-		<TargetFramework>net11.0-ios</TargetFramework>
+		<Description>StoreKit 2 for .NET iOS and tvOS: a prebuilt Swift facade (VpnHoodStoreKit.xcframework) exposing StoreKit 2's Swift-async API over a C ABI, plus the C# P/Invoke binding. Self-contained: no VpnHood dependencies.</Description>
+		<!-- One package for both: the xcframework holds each platform's slices, and an app links its own. -->
+		<TargetFrameworks>net11.0-ios;net11.0-tvos</TargetFrameworks>
 		<SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
 		<!-- Binding project: the ONLY project type whose pack embeds NativeReference content
 		     (as TargetName.resources.zip beside the dll) so consumers link the xcframework
@@ -42,9 +43,8 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageProjectUrl>https://github.com/vpnhood/VpnHood.AppLib.Stores.AppStore.Native</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vpnhood/VpnHood.AppLib.Stores.AppStore.Native</RepositoryUrl>
-		<PackageTags>StoreKit, StoreKit2, In-App Purchase, IAP, iOS, VPN, VpnHood</PackageTags>
+		<PackageTags>StoreKit, StoreKit2, In-App Purchase, IAP, iOS, tvOS, VPN, VpnHood</PackageTags>
 		<Version>9.0.10</Version>
-		<FileVersion>$([System.DateTime]::Now.ToString("yyyy.M.d.HHmm"))</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -13,7 +13,7 @@
 // when a transaction is finished are the caller's, so changing any of them never
 // needs this binary rebuilt.
 //
-// Why this exists: Microsoft.iOS does not bind StoreKit 2's Swift-async API.
+// Why this exists: Microsoft.iOS and Microsoft.tvOS do not bind StoreKit 2's Swift-async API.
 // This file is intentionally the package's ONLY Swift — everything above it is C#.
 
 import Foundation
@@ -260,6 +260,9 @@ public func vhsk_finish_transaction(
 // switch to the App Store. Returns once the sheet is dismissed. In the sandbox the
 // sheet is empty (StoreKit testing has no real subscriptions) — that is an
 // environment limit, not a failure, so it still completes successfully.
+// iOS alone: StoreKit has no such sheet on tvOS, whose Settings manage subscriptions,
+// so the tvOS slices export no such function.
+#if os(iOS)
 @_cdecl("vhsk_show_manage_subscriptions")
 public func vhsk_show_manage_subscriptions(
     _ context: UnsafeMutableRawPointer?,
@@ -280,6 +283,7 @@ public func vhsk_show_manage_subscriptions(
         }
     }
 }
+#endif
 
 private func checked<T>(_ result: VerificationResult<T>) throws -> T {
     switch result {

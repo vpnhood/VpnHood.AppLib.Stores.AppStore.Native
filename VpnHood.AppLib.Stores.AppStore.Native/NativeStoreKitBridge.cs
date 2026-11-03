@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using ObjCRuntime;
 
@@ -7,7 +8,7 @@ namespace VpnHood.AppLib.Stores.AppStore.Native;
 /// <summary>
 /// Binding to the VpnHoodStoreKit Swift facade (swift/VpnHoodStoreKit): plain
 /// C functions taking/returning JSON strings, completion via a C callback.
-/// Microsoft.iOS cannot call SK2's Swift-async API directly — this facade is
+/// Microsoft.iOS and Microsoft.tvOS cannot call SK2's Swift-async API directly — this facade is
 /// the documented seam (see swift/README.md for building the xcframework).
 /// </summary>
 public class NativeStoreKitBridge : IStoreKitBridge
@@ -50,12 +51,20 @@ public class NativeStoreKitBridge : IStoreKitBridge
         return JsonSerializer.Deserialize(resultJson, StoreKitJsonContext.Default.Boolean);
     }
 
+    // StoreKit has no such sheet on tvOS, so the facade's tvOS slices export no such function.
+    [UnsupportedOSPlatform("tvos")]
+#if TVOS
+    public Task ShowManageSubscriptions(CancellationToken cancellationToken) =>
+        throw new PlatformNotSupportedException(
+            "tvOS has no manage-subscriptions sheet: the TV's Settings manage subscriptions.");
+#else
     public async Task ShowManageSubscriptions(CancellationToken cancellationToken)
     {
         await Invoke(
             contextHandle => vhsk_show_manage_subscriptions(contextHandle, CompletedDelegate),
             cancellationToken).ConfigureAwait(false);
     }
+#endif
 
     // ------------------------------------------------------------ plumbing --
 
@@ -121,6 +130,8 @@ public class NativeStoreKitBridge : IStoreKitBridge
     private static extern void vhsk_finish_transaction(string transactionId, nint context,
         CompletionDelegate callback);
 
+#if !TVOS
     [DllImport("__Internal", CallingConvention = CallingConvention.Cdecl)]
     private static extern void vhsk_show_manage_subscriptions(nint context, CompletionDelegate callback);
+#endif
 }
