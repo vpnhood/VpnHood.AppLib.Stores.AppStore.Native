@@ -44,7 +44,7 @@
 		<PackageProjectUrl>https://github.com/vpnhood/VpnHood.AppLib.Stores.AppStore.Native</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vpnhood/VpnHood.AppLib.Stores.AppStore.Native</RepositoryUrl>
 		<PackageTags>StoreKit, StoreKit2, In-App Purchase, IAP, iOS, tvOS, VPN, VpnHood</PackageTags>
-		<Version>9.0.10</Version>
+		<Version>9.0.11</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
